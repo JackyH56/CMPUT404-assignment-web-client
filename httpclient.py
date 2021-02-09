@@ -34,12 +34,15 @@ class HTTPResponse(object):
         self.body = body
 
 class HTTPClient(object):
-    def get_host_port(self,url):
+    def get_host_port_path(self,url):
         host = urllib.parse.urlparse(url).hostname
         port = urllib.parse.urlparse(url).port
         if port == None:
             port = 80
-        return host, port
+        path = urllib.parse.urlparse(url).path
+        if path == "":
+            path = "/"
+        return host, port, path
 
     def connect(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -48,9 +51,8 @@ class HTTPClient(object):
 
     def get_code(self, data):
         code = data.split("\r\n")[0]
-        code = code.split("HTTP/1.1 ")[1]
-        code = code.split(" ")[0]
-        return code
+        code = code.split(" ")[1]
+        return int(code)
 
     def get_headers(self,data):
         headers = data.split("\r\n")[1]
@@ -81,22 +83,27 @@ class HTTPClient(object):
 
     def GET(self, url, args=None):
         code = 500
-        host, port = self.get_host_port(url)
-        body = f'GET / HTTP/1.1\r\nHost: {host}\r\n\r\n'
-        self.connect(host, port)
-        self.sendall(body)
-        data = self.recvall(self.socket)
-
-        code = self.get_code(data)
-        headers = self.get_headers(data)
-        body = self.get_body(data)
-
+        host, port, path = self.get_host_port_path(url)
+        body = f'GET {path} HTTP/1.1\r\nHost: {host}\r\n\r\n'
+        try:
+            self.connect(host, port)
+            self.sendall(body)
+            self.socket.shutdown(socket.SHUT_WR)
+            data = self.recvall(self.socket)
+            code = self.get_code(data)
+            headers = self.get_headers(data)
+            body = self.get_body(data)
+        except:
+            code = 404
+            body = ""
+        self.close()
         return HTTPResponse(code, body)
 
 
     def POST(self, url, args=None):
         code = 500
-        body = f'POST /~hindle1/1.py HTTP/1.1\r\nHost: {url}\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 60\r\n\r\n'
+        host, port, path = self.get_host_port_path(url)
+        body = f'POST {path} HTTP/1.1\r\nHost: {host}\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 60\r\n\r\n'
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
