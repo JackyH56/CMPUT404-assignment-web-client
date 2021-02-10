@@ -1,4 +1,4 @@
-# remove this later !/usr/bin/env python3
+# !/usr/bin/env python3
 # coding: utf-8
 # Copyright 2016 Abram Hindle, https://github.com/tywtyw2002, and https://github.com/treedust
 # 
@@ -23,7 +23,6 @@ import socket
 import re
 # you may use urllib to encode data appropriately
 import urllib.parse
-from pprint import pprint
 
 def help():
     print("httpclient.py [GET/POST] [URL]\n")
@@ -34,6 +33,7 @@ class HTTPResponse(object):
         self.body = body
 
 class HTTPClient(object):
+    #modified this method to also parse the path
     def get_host_port_path(self,url):
         host = urllib.parse.urlparse(url).hostname
         port = urllib.parse.urlparse(url).port
@@ -55,7 +55,6 @@ class HTTPClient(object):
         return int(code)
 
     def get_headers(self,data):
-        headers = data.split("\r\n")[1]
         headers = data.split("\r\n\r\n")[0]
         return headers
 
@@ -94,12 +93,13 @@ class HTTPClient(object):
             headers = self.get_headers(data)
             body = self.get_body(data)
         except:
+            #couldn't connect to host on port
             code = 404
             body = ""
         self.close()
         return HTTPResponse(code, body)
 
-
+    #this method handles POSTing
     def POST(self, url, args=None):
         code = 500
         host, port, path = self.get_host_port_path(url)
@@ -109,9 +109,9 @@ class HTTPClient(object):
             for key in args:
                 kv += (key + "=" + args[key] + "&")
             #remove the last "&"
+            kv = kv[:-1]
             content_length = len(kv)
             body = body + str(content_length) + "\r\n\r\n" + kv
-            print ("\n\n\n" + body)
         try:
             self.connect(host, port)
             self.sendall(body)
@@ -121,6 +121,7 @@ class HTTPClient(object):
             headers = self.get_headers(data)
             body = self.get_body(data)
         except:
+            #couldn't connect to host on port
             code = 404
             body = ""
         self.close()
@@ -139,6 +140,6 @@ if __name__ == "__main__":
         help()
         sys.exit(1)
     elif (len(sys.argv) == 3):
-        pprint(client.command( sys.argv[2], sys.argv[1] ))
+        print(client.command( sys.argv[2], sys.argv[1] ))
     else:
-        pprint(client.command( sys.argv[1] ))
+        print(client.command( sys.argv[1] ))
