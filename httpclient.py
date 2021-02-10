@@ -25,7 +25,7 @@ import re
 import urllib.parse
 
 def help():
-    print("httpclient.py [GET/POST] [URL]\n")
+    print("httpclient.py [GET/POST] [URL] [""Args""]\n")
 
 class HTTPResponse(object):
     def __init__(self, code=200, body=""):
@@ -106,13 +106,13 @@ class HTTPClient(object):
         host, port, path = self.get_host_port_path(url)
         body = f'POST {path} HTTP/1.1\r\nHost: {host}\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 0'
         if args != None:
-            kv = ""
+            content = ""
             for key in args:
-                kv += (key + "=" + args[key] + "&")
+                content += (key + "=" + args[key] + "&")
             #remove the last "&"
-            kv = kv[:-1]
-            content_length = len(kv)
-            body = body[:-1] + str(content_length) + "\r\n\r\n" + kv
+            content = content[:-1]
+            content_length = len(content)
+            body = body[:-1] + str(content_length) + "\r\n\r\n" + content
         try:
             self.connect(host, port)
             print(body)
@@ -144,5 +144,21 @@ if __name__ == "__main__":
         sys.exit(1)
     elif (len(sys.argv) == 3):
         print(client.command( sys.argv[2], sys.argv[1] ))
+    elif (len(sys.argv) == 4):
+        kv_dict = {}
+        args = sys.argv[3].replace("'","")
+        if "&" in args:
+            kv = args.split("&")
+            for pair in kv:
+                key, value = pair.split("=")
+                kv_dict[key] = value
+            
+        elif "&" not in sys.argv[3] and "=" in sys.argv[3]:
+            kv = sys.argv[3].split("=")
+            kv_dict[kv[0]] = kv[1]
+        else:
+            help()
+            sys.exit(1)
+        print(client.command( sys.argv[2], sys.argv[1], kv_dict ))
     else:
         print(client.command( sys.argv[1] ))
