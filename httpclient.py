@@ -104,7 +104,7 @@ class HTTPClient(object):
     def POST(self, url, args=None):
         code = 500
         host, port, path = self.get_host_port_path(url)
-        body = f'POST {path} HTTP/1.1\r\nHost: {host}\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: '
+        body = f'POST {path} HTTP/1.1\r\nHost: {host}\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 0'
         if args != None:
             kv = ""
             for key in args:
@@ -112,9 +112,10 @@ class HTTPClient(object):
             #remove the last "&"
             kv = kv[:-1]
             content_length = len(kv)
-            body = body + str(content_length) + "\r\n\r\n" + kv
+            body = body[:-1] + str(content_length) + "\r\n\r\n" + kv
         try:
             self.connect(host, port)
+            print(body)
             self.sendall(body)
             self.socket.shutdown(socket.SHUT_WR)
             data = self.recvall(self.socket)
