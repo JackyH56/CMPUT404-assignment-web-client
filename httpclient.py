@@ -25,7 +25,7 @@ import re
 import urllib.parse
 
 def help():
-    print("httpclient.py [GET/POST] [URL] [""Args""]\n")
+    print("httpclient.py [GET/POST] [URL] [\"Args\"]\n")
 
 class HTTPResponse(object):
     def __init__(self, code=200, body=""):
